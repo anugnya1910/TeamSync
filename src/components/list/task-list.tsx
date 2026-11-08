@@ -206,8 +206,8 @@ export function TaskList() {
           ) : null}
         </td>
         <td className="px-2 font-tabular text-xs whitespace-nowrap text-muted-foreground">{key}</td>
-        <td className="max-w-0 min-w-48 px-2">
-          <button type="button" className="block w-full truncate py-2 text-left font-medium hover:underline" onClick={() => openTask(key)}>
+        <td className="min-w-56 px-2">
+          <button type="button" className="block max-w-[32rem] truncate py-2 text-left font-medium hover:underline" onClick={() => openTask(key)}>
             {t.title}
           </button>
         </td>
@@ -303,7 +303,7 @@ export function TaskList() {
         <>
           {/* Desktop table */}
           <div ref={scrollRef} className={cn("hidden overflow-x-auto rounded-xl border bg-card md:block", virtual && "max-h-[70vh] overflow-y-auto")}>
-            <table className="w-full min-w-[900px] table-fixed border-collapse" aria-rowcount={taskRows.length}>
+            <table className="w-full min-w-[960px] border-collapse" aria-rowcount={taskRows.length}>
               <thead className="sticky top-0 z-10 bg-surface-2 text-left text-xs text-muted-foreground">
                 <tr>
                   <th scope="col" className="w-8 px-2">
@@ -330,7 +330,7 @@ export function TaskList() {
               <tbody style={virtual ? { height: virtualizer.getTotalSize(), position: "relative" } : undefined}>
                 {(virtual ? virtualizer.getVirtualItems().map((v) => ({ row: rows[v.index]!, v })) : rows.map((row) => ({ row, v: null }))).map(({ row, v }) => {
                   const style: React.CSSProperties | undefined = v
-                    ? { position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${v.start}px)`, display: "table", tableLayout: "fixed" }
+                    ? { position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${v.start}px)`, display: "table" }
                     : undefined;
                   if (row.kind === "group") {
                     const open = !collapsed.has(row.id);

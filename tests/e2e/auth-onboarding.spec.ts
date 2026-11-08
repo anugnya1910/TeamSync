@@ -34,7 +34,7 @@ test.describe("sign up → onboarding → dashboard → logout → login", () =>
     await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Log in" }).click();
     await page.waitForURL(new RegExp(`/w/${slug}/members$`));
-    await expect(page.getByText("(you)")).toBeVisible();
+    await expect(page.getByText("You", { exact: true })).toBeVisible();
 
     // Login without next → resolver returns to last workspace.
     await page.goto("/app");

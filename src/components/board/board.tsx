@@ -21,7 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { formatInTimeZone } from "date-fns-tz";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronRight, KanbanSquare, MoreVertical, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createTask } from "@/app/(app)/w/[workspaceSlug]/_actions/task";
 import { EmptyState } from "@/components/brand/empty-state";
@@ -49,17 +49,33 @@ const RENDER_CHUNK = 60;
 
 type Columns = Record<TaskStatus, string[]>;
 
-function SortableCard({ id, disabled, children, label }: { id: string; disabled: boolean; children: React.ReactNode; label: string }) {
+function SortableCard({ id, disabled, children, label, onOpen }: { id: string; disabled: boolean; children: React.ReactNode; label: string; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
+  // Keep list semantics (no nested interactive content inside role=button); dnd-kit still handles
+  // pointer, touch and keyboard (Space to lift) through the listeners.
+  const { role: _role, ...a11y } = attributes;
+  // Swallow the click that follows a drag so dropping a card doesn't open it.
+  const dragged = useRef(false);
+  useEffect(() => {
+    if (isDragging) dragged.current = true;
+    else {
+      const t = window.setTimeout(() => (dragged.current = false), 50);
+      return () => window.clearTimeout(t);
+    }
+  }, [isDragging]);
   const reduced = useReducedMotionPreference();
   return (
     <motion.li
       layout={reduced ? false : "position"}
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn("list-none touch-manipulation", isDragging && "opacity-40")}
-      {...attributes}
+      className={cn("list-none cursor-pointer touch-manipulation rounded-lg", isDragging && "opacity-40")}
+      {...a11y}
       {...listeners}
+      tabIndex={0}
+      onClick={() => {
+        if (!dragged.current) onOpen();
+      }}
       aria-roledescription={disabled ? undefined : "draggable task"}
       aria-label={label}
     >
@@ -254,14 +270,13 @@ export function Board() {
 
   const refresh = () => void qc.invalidateQueries({ queryKey: qk.projectTasks(project.id) });
   const activeTask = activeId ? byId.get(activeId) : null;
-  const cardMenu = (t: BoardTask) =>
-    canDrag ? (
+  const cardMenu = (t: BoardTask) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
             className="grid size-6 place-items-center rounded text-muted-foreground opacity-100 hover:bg-muted md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
-            aria-label={`Move ${project.key}-${t.number} to…`}
+            aria-label={canDrag ? `Move ${project.key}-${t.number} to…` : `Actions for ${project.key}-${t.number}`}
             onPointerDown={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
@@ -270,18 +285,22 @@ export function Board() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuLabel>Move to…</DropdownMenuLabel>
-          {statuses
-            .filter((s) => s !== t.status)
-            .map((s) => (
-              <DropdownMenuItem key={s} onSelect={() => moveTo(t, s)}>
-                <StatusIcon status={s} showLabel />
-              </DropdownMenuItem>
-            ))}
+          <DropdownMenuItem onSelect={() => openTask(`${project.key}-${t.number}`)}>Open task</DropdownMenuItem>
+          {canDrag ? (
+            <>
+              <DropdownMenuLabel>Move to…</DropdownMenuLabel>
+              {statuses
+                .filter((s) => s !== t.status)
+                .map((s) => (
+                  <DropdownMenuItem key={s} onSelect={() => moveTo(t, s)}>
+                    <StatusIcon status={s} showLabel />
+                  </DropdownMenuItem>
+                ))}
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-    ) : null;
-
+    );
   const column = (status: TaskStatus) => {
     const ids = cols[status] ?? [];
     const colTasks = ids.map((x) => byId.get(x)!).filter(Boolean);
@@ -329,14 +348,8 @@ export function Board() {
             <SortableContext items={ids} strategy={verticalListSortingStrategy}>
               <ColumnDrop status={status}>
                 {colTasks.slice(0, shown).map((t) => (
-                  <SortableCard key={t.id} id={t.id} disabled={!canDrag} label={`${project.key}-${t.number}: ${t.title}`}>
-                    <div
-                      role="button"
-                      tabIndex={-1}
-                      onClick={() => openTask(`${project.key}-${t.number}`)}
-                      onKeyDown={(e) => e.key === "Enter" && openTask(`${project.key}-${t.number}`)}
-                      className="cursor-pointer rounded-lg"
-                    >
+                  <SortableCard key={t.id} id={t.id} disabled={!canDrag} label={`${project.key}-${t.number}: ${t.title}`} onOpen={() => openTask(`${project.key}-${t.number}`)}>
+                    <div>
                       <TaskCard
                         task={t}
                         projectKey={project.key}

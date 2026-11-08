@@ -4,7 +4,6 @@ import { card, createInviteLink, createProject, joinViaInvite, quickAdd } from "
 
 test.describe("Phase 2 — core collaboration", () => {
   test.skip(!hasSupabase, "requires a local Supabase stack (E2E_SUPABASE=1)");
-  test.describe.configure({ mode: "serial" });
   test.skip(({ isMobile }) => isMobile, "desktop journeys; mobile covered separately");
 
   test("1 invite link → second user joins → appears in members", async ({ page, browser }) => {
@@ -156,7 +155,7 @@ test.describe("Phase 2 — mobile", () => {
     await createProject(page, slug, { name: "Mobile", key: "MOB" });
     await page.goto(`/w/${slug}/p/MOB/board`);
     await quickAdd(page, "To do", "Phone task");
-    await page.getByRole("button", { name: "Move MOB-1 to…" }).click();
+    await page.getByRole("button", { name: "Move MOB-1 to…", exact: true }).click();
     await page.getByRole("menuitem", { name: /In review/ }).click();
     await expect(page.getByRole("region", { name: /^In review column/ }).getByText("Phone task")).toBeAttached();
     for (const p of [`/w/${slug}/projects`, `/w/${slug}/p/MOB/board`, `/w/${slug}/p/MOB/list`, `/w/${slug}/p/MOB/calendar`, `/w/${slug}/members`, `/w/${slug}/inbox`, `/w/${slug}/my-tasks`]) {

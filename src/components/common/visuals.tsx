@@ -80,16 +80,16 @@ export function AvatarStack({
 }
 
 const STATUS_STYLE: Record<ProjectStatus, string> = {
-  planning: "bg-info/15 text-info-text",
-  active: "bg-success/15 text-success-text",
-  on_hold: "bg-warning/15 text-warning-text",
-  completed: "bg-primary/15 text-primary",
-  archived: "bg-muted text-muted-foreground",
+  planning: "border-info/50 text-info-text",
+  active: "border-success/50 text-success-text",
+  on_hold: "border-warning/60 text-warning-text",
+  completed: "border-primary/50 text-primary",
+  archived: "border-border text-muted-foreground",
 };
 
 export function ProjectStatusPill({ status, className }: { status: ProjectStatus; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", STATUS_STYLE[status], className)}>
+    <span className={cn("inline-flex items-center rounded-full border bg-background px-2 py-0.5 text-xs font-medium", STATUS_STYLE[status], className)}>
       {PROJECT_STATUS_LABELS[status]}
     </span>
   );
