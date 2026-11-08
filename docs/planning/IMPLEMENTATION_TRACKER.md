@@ -10,8 +10,8 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1 — Foundation & UI |
-| Overall status | 🟨 Phase 1 implemented; CI database/e2e verification pending |
+| Current phase | Phase 2 — Core Full-Stack |
+| Overall status | ✅ Phase 1 complete (CI green) · 🟨 Phase 2 in progress |
 | Last updated | 2026-11-08 (IST) by Claude Code for anugnya |
 | Repository | https://github.com/anugnya1910/TeamSync |
 | Production URL | — (fill **only** after verified deployment) |
@@ -24,7 +24,7 @@
 
 | Phase | Status | Started | Completed | Acceptance criteria passed | Notes |
 |---|---|---|---|---|---|
-| 1 — Foundation & UI | 🟨 | 2026-11-08 | | see §4 | Local gates green; DB + Supabase e2e verified only in CI |
+| 1 — Foundation & UI | ✅ | 2026-11-08 | 2026-11-08 | 12 / 13 (AC12 partial) | CI run on `89a2807`: quality, pgTAP, e2e (real Supabase) all green |
 | 2 — Core Full-Stack | ⬜ | | | 0 / 14 | |
 | 3 — Intelligence & Innovation | ⬜ | | | 0 / 12 | |
 | 4 — Testing & Deployment | ⬜ | | | 0 / 14 | |
@@ -33,7 +33,8 @@
 
 | Date | Phase | Summary of work | Commits | Next step |
 |---|---|---|---|---|
-| 2026-11-08 | 1 | Scaffold (Next 16.4, Tailwind 4, shadcn radix-nova), design system, 5 migrations + pgTAP (30 assertions), auth, onboarding, app shell, dashboard, settings, landing, security headers, Vitest (104) + Playwright, CI | `feat(phase1)` | Verify CI (pgTAP + e2e with Supabase), then Phase 2 |
+| 2026-11-08 | 1 | Scaffold (Next 16.4, Tailwind 4, shadcn radix-nova), design system, 5 migrations + pgTAP (30 assertions), auth, onboarding, app shell, dashboard, settings, landing, security headers, Vitest (104) + Playwright, CI | `b850243` | Verify CI |
+| 2026-11-08 | 1 | First CI e2e run with real Supabase found 3 bugs (BUG-003…005); fixed; CI fully green. Lighthouse measured; landing JS reduced (providers split), grain overlay made cheap | `89d217b`, `89a2807`, phase-1 completion commit | Phase 2 |
 
 ---
 
@@ -65,8 +66,8 @@
 - [x] Migration `p1_workspaces_core` (+ RPCs)
 - [x] Migration `p1_rls_helpers`
 - [x] Migration `p1_storage_avatars`
-- [ ] Types generated — hand-written in generator format; CI regenerates from the real schema and re-typechecks (pending first CI run)
-- [ ] pgTAP Phase 1 suite (≥ 12) — written (30 assertions), passes in local PGlite harness; awaiting real `supabase test db` in CI
+- [x] Types generated — CI regenerates with the Supabase CLI and the typecheck passes against them
+- [x] pgTAP Phase 1 suite (≥ 12) — 30 assertions, green in CI (`supabase test db`)
 
 **Auth & onboarding**
 - [x] Login / Signup / Forgot / Reset / Callback
@@ -90,12 +91,12 @@
 - [x] Security headers + CSP
 - [x] ESLint restriction on admin client import
 - [x] Vitest unit/component tests
-- [ ] Playwright: landing, auth-onboarding, responsive, protected routes (+ axe) — 52 runs pass locally across desktop-chrome + mobile-safari; 12 Supabase-dependent runs skipped locally, run in CI
+- [x] Playwright: landing, auth-onboarding, responsive, protected routes (+ axe) — all green in CI against a real local Supabase stack (desktop-chrome + mobile-safari)
 - [x] GitHub Actions CI (+ pgTAP job) + gitleaks
 - [ ] Supabase prod project + `db push` — ⛔ needs the student's Supabase account (see §12)
 - [ ] Vercel preview/production deploy (verified) — ⛔ needs the student's Vercel account (see §12)
 
-**Phase 1 acceptance:** AC1 ✅ (local) AC2 🟨 CI AC3 🟨 CI AC4 🟨 CI AC5 🟨 partial (redirects ✅ local; session/logout in CI) AC6 🟨 CI AC7 ✅ (29/29 contrast pairs both themes, screenshots) AC8 🟨 (public pages ✅ local; app pages CI) AC9 🟨 (landing + auth ✅ local; onboarding/dashboard CI) AC10 ✅ AC11 ✅ AC12 ⬜ (Lighthouse not yet run) AC13 ✅
+**Phase 1 acceptance:** AC1 ✅ AC2 ✅ (CI) AC3 ✅ (CI audit query) AC4 ✅ (CI) AC5 ✅ (CI) AC6 ✅ (pgTAP) AC7 ✅ (29/29 contrast pairs in both themes, screenshots) AC8 ✅ AC9 ✅ AC10 ✅ AC11 ✅ AC12 🟨 partial — landing Lighthouse: accessibility 100, best practices 100, SEO 100, performance **99 desktop / 87 mobile** (simulated slow 4G + 4× CPU; see docs/reports; revisit in Phase 4) AC13 ✅
 
 ### Phase 2 — Core Full-Stack Application
 
@@ -279,12 +280,12 @@ Append per session. Group by phase.
 | Unit — lib/utils | Vitest | 1–4 | 85 | 85 | target ≥ 70 % | 2026-11-08 | safe-next, validators, error maps, slug, invite, contrast, format, tz, nav, hotkeys |
 | Component | Vitest + RTL | 1–3 | 6 | 6 | | 2026-11-08 | PulseRing, EmptyState, ComingSoon, icons |
 | Integration — server actions | Vitest + local Supabase | 2–4 | | | | | |
-| Database — RLS/triggers | pgTAP | 1–4 | 30 | 30 in PGlite harness; real run pending CI | every table | 2026-11-08 | |
-| E2E — @smoke | Playwright | 1–4 | 32 specs × 2 projects | 52 pass, 12 skipped (need Supabase) locally | | 2026-11-08 | Supabase-dependent specs run in CI |
+| Database — RLS/triggers | pgTAP | 1–4 | 30 | 30 (CI) | every table | 2026-11-08 | |
+| E2E — @smoke | Playwright | 1–4 | 32 specs × 2 projects | all pass in CI with real Supabase | | 2026-11-08 | |
 | E2E — @full | Playwright | 1–4 | | | | | |
 | Accessibility | axe + manual | 1–4 | landing, login, signup, forgot | 0 serious/critical (local) | 0 serious | 2026-11-08 | onboarding + dashboard axe in CI |
 | Responsive | Playwright viewports | 1–4 | | | | | |
-| Performance | Lighthouse CI | 4 | | | ≥ 90 landing | | |
+| Performance | Lighthouse (local prod build) | 1–4 | landing | desktop 99 · mobile 87 | ≥ 90 landing | 2026-11-08 | docs/reports/lighthouse-landing-phase1-*.json |
 | Security | ZAP, gitleaks, npm audit, manual | 4 | | | 0 high | | |
 
 ## 9. Bugs
@@ -293,6 +294,10 @@ Append per session. Group by phase.
 |---|---|---|---|---|---|---|---|
 | BUG-001 | 2026-11-08 | 1 | S2 | Handle base truncated to 3 chars (`rpad` also truncates) | New user alice@… got handle `ali_1234` | ✅ Fixed before first commit | phase 1 commit |
 | BUG-002 | 2026-11-08 | 1 | S1 | CSP `upgrade-insecure-requests` + HSTS broke CSS/JS on `http://localhost` in WebKit | `next start`, open in WebKit → unstyled, no JS | ✅ Fixed: emitted only when NEXT_PUBLIC_APP_URL is https | phase 1 commit |
+| BUG-003 | 2026-11-08 | 1 | S2 | Foreign workspace returned HTTP 200 (not-found UI) instead of 404 | Non-member opens `/w/<other>` | ✅ Fixed: removed `(app)/loading.tsx` so `notFound()` in the layout runs before streaming | `89a2807` |
+| BUG-004 | 2026-11-08 | 1 | S3 | axe: `aria-label` on a plain div (loading skeleton); unlabeled avatar file input | axe on onboarding | ✅ Fixed | `89a2807` |
+| BUG-005 | 2026-11-08 | 1 | S3 | axe label-in-name: switcher/user menu/search buttons' aria-labels didn't contain visible text | axe on dashboard | ✅ Fixed | `89a2807` |
+| BUG-006 | 2026-11-08 | 2 | S1 | `REPLICA IDENTITY FULL` on `tasks` (published) + generated `search_vector` makes every task UPDATE fail on Postgres 17 | any task update | ✅ Fixed before commit: tasks keep default replica identity | phase 2 |
 
 ## 10. Dependency Versions (record exact installed versions)
 
@@ -335,7 +340,7 @@ Append per session. Group by phase.
 | 1 | Create Supabase project `teamsync-prod`, configure Auth URLs, `supabase link` + `supabase db push` | Student | Supabase account login (cannot be done by the agent) | before Phase 4 |
 | 2 | Import repo into Vercel, set env vars from `.env.example` | Student | Vercel account login | before Phase 4 |
 | 3 | Optional: Google OAuth client → set `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true` | Student | Google Cloud Console | optional |
-| 4 | Lighthouse run on a production build (AC12) | Claude Code | — | Phase 4 |
+| 4 | Mobile Lighthouse performance 87 → ≥ 90 (framework JS under 4× CPU throttle dominates; even /signup scores 84) | Claude Code | — | Phase 4 |
 
 ## 13. Deployment Status
 
