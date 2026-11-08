@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DesignSystemShowcase } from "@/components/dev/design-system-showcase";
+import { AppProviders } from "../../providers";
 
 export const metadata: Metadata = { title: "Design system", robots: { index: false, follow: false } };
 
@@ -9,5 +10,9 @@ export default function DesignSystemPage() {
   if (process.env.NODE_ENV === "production" && process.env.TEAMSYNC_ENABLE_DEV_PAGES !== "true") {
     notFound();
   }
-  return <DesignSystemShowcase />;
+  return (
+    <AppProviders>
+      <DesignSystemShowcase />
+    </AppProviders>
+  );
 }

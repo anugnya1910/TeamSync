@@ -3,9 +3,11 @@ import { GrainOverlay } from "@/components/brand/grain-overlay";
 import { Logo } from "@/components/brand/logo";
 import { RotatingStatements } from "@/components/auth/rotating-statements";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AppProviders } from "../providers";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
+    <AppProviders>
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <aside
         className="relative hidden overflow-hidden border-r lg:flex lg:flex-col lg:justify-between lg:p-10"
@@ -37,5 +39,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </main>
       </div>
     </div>
+    </AppProviders>
   );
 }
