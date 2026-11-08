@@ -36,6 +36,7 @@ export async function signIn(input: LoginInput, next?: string | null): Promise<A
 
 export async function signUp(
   input: SignupInput,
+  next?: string | null,
 ): Promise<ActionResult<{ needsConfirmation: boolean }>> {
   const parsed = signupSchema.safeParse(input);
   if (!parsed.success) return fail("VALIDATION", "Please check your details.", fieldErrors(parsed.error));
@@ -46,13 +47,13 @@ export async function signUp(
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(safeNextPath(next, "/onboarding"))}`,
       data: { full_name: parsed.data.fullName },
     },
   });
   if (error) return fail("VALIDATION", mapAuthError(error));
 
-  if (data.session) redirect("/onboarding");
+  if (data.session) redirect(safeNextPath(next, "/onboarding"));
   // No session → email confirmation required (or the address already exists; we never say which).
   return ok({ needsConfirmation: true });
 }

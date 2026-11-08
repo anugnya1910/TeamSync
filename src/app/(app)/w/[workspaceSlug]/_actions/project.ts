@@ -67,7 +67,7 @@ export async function updateProject(input: z.input<typeof updateProjectSchema>):
 
 const wipSchema = z.object({
   projectId: uuidSchema,
-  limits: z.record(z.enum(["backlog", "todo", "in_progress", "in_review", "done"]), z.number().int().min(1).max(500).nullable()),
+  limits: z.partialRecord(z.enum(["backlog", "todo", "in_progress", "in_review", "done"]), z.number().int().min(1).max(500).nullable()),
 });
 export async function updateWipLimits(input: z.input<typeof wipSchema>): Promise<ActionResult<null>> {
   return withSession(wipSchema, input, async ({ data, supabase }) => {

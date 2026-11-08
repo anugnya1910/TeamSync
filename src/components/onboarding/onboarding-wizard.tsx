@@ -20,6 +20,7 @@ import { motionTransition, useReducedMotionPreference } from "@/lib/motion";
 import { initials } from "@/lib/utils/format";
 import { parseInviteToken } from "@/lib/utils/invite";
 import { slugify } from "@/lib/utils/slug";
+import { suggestProjectKey } from "@/lib/utils/task-key";
 import { detectTimeZone, isValidTimeZone } from "@/lib/utils/timezones";
 import { onboardingProfileSchema } from "@/lib/validation/profile";
 import { createWorkspaceSchema } from "@/lib/validation/workspace";
@@ -63,6 +64,10 @@ export function OnboardingWizard(props: Props) {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [invite, setInvite] = useState("");
+  const [projectName, setProjectName] = useState("");
+  const [projectKey, setProjectKey] = useState("");
+  const [projectKeyTouched, setProjectKeyTouched] = useState(false);
+  const [template, setTemplate] = useState<"none" | "blank" | "college_project" | "event_planning">("none");
   const slugStatus = useSlugAvailability(slug);
 
   const go = (next: number) => {
@@ -122,10 +127,15 @@ export function OnboardingWizard(props: Props) {
 
   function submit() {
     setFormError(null);
+    if (template !== "none" && (!projectName.trim() || !/^[A-Z]{2,5}$/.test(projectKey))) {
+      setFormError("Give the project a name and a 2–5 letter key, or choose “Skip for now”.");
+      return;
+    }
     start(async () => {
       const res = await completeOnboarding({
         profile: { fullName, jobTitle, timezone, avatarUrl },
         workspace: { name: wsName, slug },
+        project: template !== "none" && projectName.trim() ? { name: projectName, key: projectKey, template } : null,
       });
       if (res && !res.ok) {
         const fe = res.error.fieldErrors ?? {};
@@ -319,8 +329,7 @@ export function OnboardingWizard(props: Props) {
                       <Alert>
                         <Link2 className="size-4" aria-hidden />
                         <AlertDescription>
-                          Invite links activate in Phase 2. You can open the link now to see its
-                          status, or create your own workspace instead.
+                          We&apos;ll show you the invitation so you can join that workspace.
                         </AlertDescription>
                       </Alert>
                     </>
@@ -350,13 +359,41 @@ export function OnboardingWizard(props: Props) {
                       </div>
                     </dl>
                   </div>
-                  <Alert>
-                    <Info className="size-4" aria-hidden />
-                    <AlertDescription>
-                      Templates arrive with Projects in Phase 2 — after that you&apos;ll be able to
-                      start from <em>College Project</em> or <em>Event Planning</em> right here.
-                    </AlertDescription>
-                  </Alert>
+                  <fieldset className="space-y-3">
+                    <legend className="text-sm font-semibold">First project <span className="font-normal text-muted-foreground">(optional)</span></legend>
+                    <div role="radiogroup" aria-label="Project template" className="grid gap-2 sm:grid-cols-2">
+                      {(
+                        [
+                          ["none", "Skip for now", "Create projects later"],
+                          ["blank", "Blank", "An empty board"],
+                          ["college_project", "College Project", "Research → Build → Test → Report"],
+                          ["event_planning", "Event Planning", "Plan → Promote → Execute → Wrap-up"],
+                        ] as const
+                      ).map(([v, title, body]) => (
+                        <button key={v} type="button" role="radio" aria-checked={template === v} onClick={() => setTemplate(v)} className={cn("rounded-xl border p-3 text-left", template === v ? "border-primary bg-primary/5" : "hover:bg-muted")}>
+                          <span className="block text-sm font-semibold">{title}</span>
+                          <span className="block text-xs text-muted-foreground">{body}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {template !== "none" ? (
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem]">
+                        <FormField label="Project name">
+                          {(c) => (
+                            <Input {...c} value={projectName} className="h-10" maxLength={80} onChange={(e) => { setProjectName(e.target.value); if (!projectKeyTouched) setProjectKey(suggestProjectKey(e.target.value)); }} />
+                          )}
+                        </FormField>
+                        <FormField label="Key">
+                          {(c) => (
+                            <Input {...c} value={projectKey} className="h-10 font-tabular uppercase" maxLength={5} onChange={(e) => { setProjectKeyTouched(true); setProjectKey(e.target.value.toUpperCase().replace(/[^A-Z]/g, "")); }} />
+                          )}
+                        </FormField>
+                        <p className="flex items-start gap-1.5 text-xs text-muted-foreground sm:col-span-2">
+                          <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden /> Templates add milestone and task titles only — no dates or progress.
+                        </p>
+                      </div>
+                    ) : null}
+                  </fieldset>
                 </>
               ) : null}
             </motion.div>

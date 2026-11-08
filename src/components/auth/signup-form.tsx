@@ -15,7 +15,7 @@ import { signupSchema, type SignupInput } from "@/lib/validation/auth";
 import { GoogleButton } from "./google-button";
 import { OrDivider } from "./or-divider";
 
-export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
+export function SignupForm({ googleEnabled, next }: { googleEnabled: boolean; next?: string | null }) {
   const [pending, start] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const onSubmit = form.handleSubmit((values) => {
     setFormError(null);
     start(async () => {
-      const res = await signUp(values);
+      const res = await signUp(values, next);
       if (!res) return;
       if (!res.ok) {
         setFormError(res.error.message);
@@ -76,7 +76,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
 
       {googleEnabled ? (
         <>
-          <GoogleButton next="/onboarding" />
+          <GoogleButton next={next ?? "/onboarding"} />
           <OrDivider />
         </>
       ) : null}
@@ -120,7 +120,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-medium text-primary hover:underline">
           Log in
         </Link>
       </p>

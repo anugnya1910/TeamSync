@@ -13,6 +13,7 @@ export type ShellUser = {
   theme: "system" | "light" | "dark";
   reducedMotion: boolean;
   timezone: string;
+  weekStart: 0 | 1;
 };
 
 export type WorkspaceContextValue = {

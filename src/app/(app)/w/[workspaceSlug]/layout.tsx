@@ -52,6 +52,7 @@ export default async function WorkspaceLayout({
           theme,
           reducedMotion: profile.reduced_motion,
           timezone: profile.timezone,
+          weekStart: profile.week_start === 0 ? 0 : 1,
         },
       }}
     >

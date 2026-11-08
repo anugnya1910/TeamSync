@@ -96,3 +96,27 @@ export async function signOutOtherSessions(): Promise<ActionResult<null>> {
   if (error) return fail("INTERNAL", mapAuthError(error));
   return ok(null);
 }
+
+const NOTIFICATION_TYPES = [
+  "task_assigned",
+  "mentioned",
+  "comment_on_assigned",
+  "status_changed_on_assigned",
+  "due_soon",
+  "overdue",
+  "invited_to_project",
+  "achievement_unlocked",
+  "rebalance_suggested",
+] as const;
+const prefsSchema = z.object(Object.fromEntries(NOTIFICATION_TYPES.map((t) => [t, z.boolean()])) as Record<(typeof NOTIFICATION_TYPES)[number], z.ZodBoolean>);
+
+export async function updateNotificationPrefs(input: Record<string, boolean>): Promise<ActionResult<null>> {
+  const uid = await getCurrentUserId();
+  if (!uid) return fail("UNAUTHENTICATED", "Please sign in again.");
+  const parsed = prefsSchema.safeParse(input);
+  if (!parsed.success) return fail("VALIDATION", "Unknown notification preference.");
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ notification_prefs: parsed.data }).eq("id", uid);
+  if (error) return { ok: false, error: mapPgError(error) };
+  return ok(null);
+}

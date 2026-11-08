@@ -17,7 +17,44 @@ import { ShellUiProvider, useShellUi } from "./shell-ui-context";
 import { ShortcutsDialog } from "./shortcuts-dialog";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
-import { WorkspaceProvider, type WorkspaceContextValue } from "./workspace-context";
+import { WorkspaceProvider, useWorkspace, type WorkspaceContextValue } from "./workspace-context";
+import { NewProjectDialog } from "@/components/project/new-project-dialog";
+import { NewTaskDialog } from "@/components/tasks/new-task-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+
+/** G then B / L / A: board, list, analytics of the project currently open (spec §F.7). */
+function boardShortcuts(router: ReturnType<typeof useRouter>) {
+  const projectBase = () => window.location.pathname.match(/^\/w\/[^/]+\/p\/[A-Z]{2,5}/)?.[0];
+  const to = (seg: string) => () => {
+    const base = projectBase();
+    if (base) router.push(`${base}/${seg}`);
+  };
+  return [
+    { combo: "g b", handler: to("board") },
+    { combo: "g l", handler: to("list") },
+    { combo: "g a", handler: to("analytics") },
+  ];
+}
+
+function GlobalDialogs() {
+  const { newProjectOpen, setNewProjectOpen, newTaskOpen, setNewTaskOpen } = useShellUi();
+  const { workspace } = useWorkspace();
+  const { data: teams = [] } = useQuery({
+    queryKey: ["teams", workspace.id],
+    enabled: newProjectOpen,
+    queryFn: async () => {
+      const { data } = await createClient().from("teams").select("id, name").eq("workspace_id", workspace.id).order("name");
+      return data ?? [];
+    },
+  });
+  return (
+    <>
+      <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} teams={teams} />
+      <NewTaskDialog open={newTaskOpen} onOpenChange={setNewTaskOpen} />
+    </>
+  );
+}
 
 /** Applies the profile's theme once per session and reflects reduced motion on <html>. */
 function ProfilePreferencesSync({ theme, reducedMotion }: { theme: string; reducedMotion: boolean }) {
@@ -46,7 +83,8 @@ function ProfilePreferencesSync({ theme, reducedMotion }: { theme: string; reduc
 
 function ShellHotkeys() {
   const router = useRouter();
-  const { setPaletteOpen, setShortcutsOpen, paletteOpen } = useShellUi();
+  const { setPaletteOpen, setShortcutsOpen, paletteOpen, setNewTaskOpen, setNewProjectOpen } = useShellUi();
+  const { role } = useWorkspace();
   // Re-read the slug lazily from the URL to avoid stale closures across workspace switches.
   const slug = () => window.location.pathname.split("/")[2] ?? "";
   useHotkeys([
@@ -55,6 +93,12 @@ function ShellHotkeys() {
     { combo: "?", handler: () => setShortcutsOpen(true) },
     { combo: "g h", handler: () => router.push(workspaceHref(slug())) },
     { combo: "g m", handler: () => router.push(workspaceHref(slug(), "members")) },
+    { combo: "g p", handler: () => router.push(workspaceHref(slug(), "projects")) },
+    { combo: "g i", handler: () => router.push(workspaceHref(slug(), "inbox")) },
+    { combo: "g t", handler: () => router.push(workspaceHref(slug(), "my-tasks")) },
+    { combo: "c", handler: () => setNewTaskOpen(true) },
+    { combo: "n p", handler: () => role !== "guest" && setNewProjectOpen(true) },
+    ...boardShortcuts(router),
   ]);
   return null;
 }
@@ -102,6 +146,7 @@ export function AppShell({
             <ShortcutsDialog />
             <CreateWorkspaceDialog />
             <ComingSoonDialog />
+            <GlobalDialogs />
           </ShellUiProvider>
         </SyncLineProvider>
       </ProfileReducedMotionContext>

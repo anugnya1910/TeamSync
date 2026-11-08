@@ -11,6 +11,14 @@ import { createWorkspaceSchema } from "@/lib/validation/workspace";
 const onboardingSchema = z.object({
   profile: onboardingProfileSchema,
   workspace: createWorkspaceSchema,
+  project: z
+    .object({
+      name: z.string().trim().min(2, "Use at least 2 characters").max(80),
+      key: z.string().trim().toUpperCase().regex(/^[A-Z]{2,5}$/, "Use 2–5 letters"),
+      template: z.enum(["blank", "college_project", "event_planning"]),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type OnboardingInput = z.input<typeof onboardingSchema>;
@@ -41,6 +49,17 @@ export async function completeOnboarding(input: OnboardingInput): Promise<Action
 
   const created = await createWorkspaceWith(supabase, workspace);
   if (!created.ok) return created;
+
+  if (parsed.data.project) {
+    const { data: project, error: projectError } = await supabase.rpc("create_project", {
+      p_workspace: created.data.id,
+      p_name: parsed.data.project.name,
+      p_key: parsed.data.project.key,
+      p_template: parsed.data.project.template,
+    });
+    // The workspace already exists; if the project fails, land on the dashboard instead of failing.
+    if (!projectError && project) redirect(`/w/${created.data.slug}/p/${project.key}`);
+  }
 
   redirect(`/w/${created.data.slug}`);
 }

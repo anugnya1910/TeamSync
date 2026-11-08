@@ -9,7 +9,8 @@ test.describe("sign up → onboarding → dashboard → logout → login", () =>
 
     // Dashboard shows real data only.
     await expect(page.getByRole("heading", { level: 1, name: /good (morning|afternoon|evening), ananya/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: workspace })).toBeVisible();
+    await expect(page.getByText(workspace, { exact: false }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
     await expectNoSeriousA11yViolations(page, "dashboard");
 
     // Session persists across reload.

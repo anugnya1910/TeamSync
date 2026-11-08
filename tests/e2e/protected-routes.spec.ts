@@ -18,9 +18,9 @@ test.describe("protected routes (anonymous)", () => {
     }
   });
 
-  test("invite page renders an explained placeholder", async ({ page }) => {
+  test("unknown invite token shows a helpful message", async ({ page }) => {
     await page.goto("/invite/AbCdEfGhIjKlMnOpQrStUv");
-    await expect(page.getByText("Coming in Phase 2")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invite not found" })).toBeVisible();
   });
 
   test("auth screens have no serious accessibility violations", async ({ page }) => {

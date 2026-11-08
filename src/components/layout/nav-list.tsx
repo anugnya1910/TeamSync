@@ -49,8 +49,9 @@ function NavLink({
 
 export function NavList({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { workspace } = useWorkspace();
-  const { showComingSoon } = useShellUi();
+  const { workspace, role } = useWorkspace();
+  const { setNewProjectOpen } = useShellUi();
+  const canCreate = role !== "guest";
   const active = activeNavKey(pathname, workspace.slug);
 
   return (
@@ -60,21 +61,16 @@ export function NavList({ collapsed = false, onNavigate }: { collapsed?: boolean
           {item.key === "projects" && !collapsed ? (
             <div className="mb-1 flex items-center justify-between px-2.5">
               <span className="text-meta tracking-wide text-muted-foreground uppercase">Projects</span>
-              <button
-                type="button"
-                className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-card hover:text-foreground"
-                aria-label="New project"
-                onClick={() =>
-                  showComingSoon({
-                    phase: 2,
-                    title: "Projects arrive in Phase 2",
-                    description:
-                      "Create projects with a key (like TS), milestones and tasks — or start from the College Project and Event Planning templates.",
-                  })
-                }
-              >
-                <Plus className="size-3.5" aria-hidden />
-              </button>
+              {canCreate ? (
+                <button
+                  type="button"
+                  className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-card hover:text-foreground"
+                  aria-label="New project"
+                  onClick={() => setNewProjectOpen(true)}
+                >
+                  <Plus className="size-3.5" aria-hidden />
+                </button>
+              ) : null}
             </div>
           ) : null}
           <NavLink item={item} active={active === item.key} collapsed={collapsed} onNavigate={onNavigate} />

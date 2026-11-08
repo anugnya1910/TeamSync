@@ -15,6 +15,10 @@ type ShellUi = {
   showComingSoon: (info: ComingSoonInfo | null) => void;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (v: boolean) => void;
+  newProjectOpen: boolean;
+  setNewProjectOpen: (v: boolean) => void;
+  newTaskOpen: boolean;
+  setNewTaskOpen: (v: boolean) => void;
 };
 
 const Ctx = createContext<ShellUi | null>(null);
@@ -26,6 +30,8 @@ export function ShellUiProvider({ children }: { children: ReactNode }) {
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
   const [comingSoon, showComingSoon] = useState<ComingSoonInfo | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   const value = useMemo(
     () => ({
@@ -39,8 +45,12 @@ export function ShellUiProvider({ children }: { children: ReactNode }) {
       showComingSoon,
       mobileMenuOpen,
       setMobileMenuOpen,
+      newProjectOpen,
+      setNewProjectOpen,
+      newTaskOpen,
+      setNewTaskOpen,
     }),
-    [paletteOpen, shortcutsOpen, createWorkspaceOpen, comingSoon, mobileMenuOpen],
+    [paletteOpen, shortcutsOpen, createWorkspaceOpen, comingSoon, mobileMenuOpen, newProjectOpen, newTaskOpen],
   );
   return <Ctx value={value}>{children}</Ctx>;
 }

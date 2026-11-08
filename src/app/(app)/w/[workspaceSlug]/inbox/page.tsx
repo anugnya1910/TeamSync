@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { PhasePlaceholderPage } from "@/components/layout/phase-placeholder-page";
+import { PageHeader } from "@/components/layout/page-header";
+import { Inbox } from "@/components/notifications/inbox";
 
 export const metadata: Metadata = { title: "Inbox" };
 
-export default async function InboxPage({ params }: PageProps<"/w/[workspaceSlug]/inbox">) {
-  const { workspaceSlug } = await params;
-  return <PhasePlaceholderPage navKey="inbox" slug={workspaceSlug} />;
+export default function InboxPage() {
+  return (
+    <>
+      <PageHeader title="Inbox" description="Notifications for this workspace. Choose which types you get in Settings → Notifications." />
+      <Inbox />
+    </>
+  );
 }

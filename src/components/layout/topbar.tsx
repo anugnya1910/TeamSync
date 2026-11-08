@@ -1,11 +1,18 @@
 "use client";
 
-import { Bell, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { activeNavKey, PRIMARY_NAV, SETTINGS_NAV, workspaceHref } from "@/lib/navigation";
 import { useShellUi } from "./shell-ui-context";
 import { useWorkspace } from "./workspace-context";
@@ -23,8 +30,8 @@ export function useIsMac() {
 
 export function Topbar() {
   const pathname = usePathname();
-  const { workspace } = useWorkspace();
-  const { setPaletteOpen, showComingSoon } = useShellUi();
+  const { workspace, role } = useWorkspace();
+  const { setPaletteOpen, setNewTaskOpen, setNewProjectOpen } = useShellUi();
   const key = activeNavKey(pathname, workspace.slug);
   const current = [...PRIMARY_NAV, SETTINGS_NAV].find((n) => n.key === key);
   const isMac = useIsMac();
@@ -80,35 +87,25 @@ export function Topbar() {
         </kbd>
       </Button>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Notifications (0 unread)">
-            <Bell className="size-4" aria-hidden />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-72">
-          <p className="text-sm font-semibold">Notifications</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            You&apos;re all caught up. Assignment, mention and due-date notifications arrive with
-            Projects in Phase 2.
-          </p>
-        </PopoverContent>
-      </Popover>
+      <NotificationBell />
 
-      <Button
-        size="sm"
-        className="hidden sm:inline-flex"
-        onClick={() =>
-          showComingSoon({
-            phase: 2,
-            title: "Quick create arrives in Phase 2",
-            description:
-              "Create tasks and projects from anywhere with the New button or the C shortcut once Projects ship.",
-          })
-        }
-      >
-        <Plus className="size-4" aria-hidden /> New
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" className="hidden sm:inline-flex">
+            <Plus className="size-4" aria-hidden /> New
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => setNewTaskOpen(true)}>
+            New task <DropdownMenuShortcut>C</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          {role !== "guest" ? (
+            <DropdownMenuItem onSelect={() => setNewProjectOpen(true)}>
+              New project <DropdownMenuShortcut>N P</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }

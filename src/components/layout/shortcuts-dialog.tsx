@@ -21,6 +21,14 @@ export function ShortcutsDialog() {
     [["?"], "Show keyboard shortcuts"],
     [["G", "H"], "Go to Home"],
     [["G", "M"], "Go to Members"],
+    [["G", "P"], "Go to Projects"],
+    [["G", "T"], "Go to My Tasks"],
+    [["G", "I"], "Go to Inbox"],
+    [["G", "B"], "Project board"],
+    [["G", "L"], "Project list"],
+    [["C"], "New task"],
+    [["N", "P"], "New project"],
+    [["X"], "Select task row (List view)"],
     [["Esc"], "Close the topmost dialog or menu"],
   ];
   return (
@@ -28,7 +36,7 @@ export function ShortcutsDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
-          <DialogDescription>More shortcuts (quick create, board navigation) arrive with Projects.</DialogDescription>
+          <DialogDescription>Shortcuts are disabled while typing in a field. On the board, focus a card and press Space to pick it up.</DialogDescription>
         </DialogHeader>
         <dl className="divide-y">
           {rows.map(([keys, label]) => (
