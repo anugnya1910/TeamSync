@@ -37,6 +37,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { useMoveTask } from "@/hooks/use-move-task";
 import { useProjectTasks, type BoardTask } from "@/hooks/use-project-tasks";
+import { openBlockersOf, useProjectDeps } from "@/hooks/use-project-deps";
 import { matchesFilters } from "@/lib/filters";
 import { STATUS_LABELS, type TaskStatus } from "@/lib/domain";
 import { useReducedMotionPreference } from "@/lib/motion";
@@ -140,6 +141,7 @@ export function Board() {
   const { user } = useWorkspace();
   const qc = useQueryClient();
   const { data: tasks = [], isPending, isError } = useProjectTasks(project.id);
+  const { data: deps = [] } = useProjectDeps(project.id);
   const [filters] = useTaskFilters();
   const openTask = useOpenTask();
   const { move, blocked, clearBlocked } = useMoveTask(project.id);
@@ -156,6 +158,7 @@ export function Board() {
   const showCancelled = filters.status.includes("cancelled");
   const statuses = useMemo<TaskStatus[]>(() => (showCancelled ? [...BASE_COLUMNS, "cancelled"] : BASE_COLUMNS), [showCancelled]);
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
+  const statusById = useMemo(() => new Map(tasks.map((t) => [t.id, t.status as string])), [tasks]);
   const subtaskStats = useMemo(() => {
     const m = new Map<string, { done: number; total: number }>();
     for (const t of tasks) {
@@ -358,6 +361,7 @@ export function Board() {
                         subtasks={subtaskStats.get(t.id)}
                         today={today}
                         menu={cardMenu(t)}
+                        blockedBy={openBlockersOf(t.id, deps, statusById).map((id) => `${project.key}-${byId.get(id)?.number}`)}
                       />
                     </div>
                   </SortableCard>

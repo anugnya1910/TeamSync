@@ -9,6 +9,7 @@ import { Fragment, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { bulkUpdateTasks, setAssignees } from "@/app/(app)/w/[workspaceSlug]/_actions/task";
 import { EmptyState } from "@/components/brand/empty-state";
+import { PrioritiesDialog } from "@/components/ai/ai-dialogs";
 import { PriorityIcon } from "@/components/brand/priority-icon";
 import { StatusIcon } from "@/components/brand/status-icon";
 import { AvatarStack } from "@/components/common/visuals";
@@ -61,7 +62,8 @@ type Row = { kind: "group"; id: string; label: string; count: number } | { kind:
 
 export function TaskList() {
   const { project, members, milestones, permissions, memberById } = useProject();
-  const { user } = useWorkspace();
+  const { user, workspace } = useWorkspace();
+  const workspaceAi = workspace.aiEnabled !== false;
   const qc = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -283,6 +285,7 @@ export function TaskList() {
             <SelectItem value="none">No grouping</SelectItem>
           </SelectContent>
         </Select>
+        {canEdit && workspaceAi ? <PrioritiesDialog projectId={project.id} currentPriority={Object.fromEntries(tasks.map((t) => [t.id, t.priority]))} /> : null}
         <Button asChild variant="outline" size="sm" className="h-8">
           <a href={exportHref} download>
             <Download className="size-3.5" aria-hidden /> Export CSV

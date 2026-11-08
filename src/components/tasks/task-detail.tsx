@@ -26,6 +26,8 @@ import { BlockedDialog } from "./blocked-dialog";
 import { AssigneePicker, EffortSelect, LabelPicker, MilestoneSelect, PrioritySelect, StatusSelect } from "./pickers";
 import { TaskAttachments } from "./task-attachments";
 import { TaskComments } from "./task-comments";
+import { TaskDependencies } from "./task-dependencies";
+import { BreakdownDialog } from "@/components/ai/ai-dialogs";
 
 function Prop({ label, htmlFor, children }: { label: string; htmlFor?: string; children: React.ReactNode }) {
   return (
@@ -377,6 +379,10 @@ export function TaskDetail({ number, onClosed }: { number: number; onClosed?: ()
       />
 
       <Subtasks parent={task} tasks={tasks ?? []} canEdit={canEdit} />
+      {canEdit && workspace.aiEnabled !== false && !task.parent_task_id ? (
+        <BreakdownDialog taskId={task.id} projectId={project.id} />
+      ) : null}
+      <TaskDependencies task={task} tasks={tasks ?? []} />
       <TaskAttachments taskId={task.id} workspaceId={workspace.id} />
 
       <Tabs defaultValue="comments">

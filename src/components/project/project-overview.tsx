@@ -1,6 +1,10 @@
 "use client";
 
-import { Activity, Diamond, Flag } from "lucide-react";
+import { Diamond, Flag } from "lucide-react";
+import { PulseCard, TopRisks, type TrendPoint } from "@/components/pulse/pulse-card";
+import { ExplainRisksButton, PlanDialog } from "@/components/ai/ai-dialogs";
+import type { PulseResult } from "@/lib/algorithms/pulse";
+import type { Risk } from "@/lib/algorithms/risk";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { updateProject } from "@/app/(app)/w/[workspaceSlug]/_actions/project";
@@ -30,8 +34,17 @@ export function milestoneProgress(tasks: { milestone_id: string | null; status: 
   return total === 0 ? null : { pct: Math.round((done / total) * 100), done, total };
 }
 
-export function ProjectOverview() {
-  const { project, milestones, members, permissions } = useProject();
+export type OverviewIntel = {
+  pulse: PulseResult;
+  risks: Risk[];
+  taskKeyById: Record<string, string>;
+  forecasts: Record<string, { forecast: string | null; remaining: number; late: boolean | null }>;
+  trend: TrendPoint[];
+  updatedAt: string;
+};
+
+export function ProjectOverview({ intel, aiSlot }: { intel: OverviewIntel; aiSlot?: React.ReactNode }) {
+  const { project, milestones, members, permissions, basePath } = useProject();
   const router = useRouter();
   const { data: tasks = [] } = useProjectTasks(project.id);
   const [editing, setEditing] = useState(false);
@@ -45,9 +58,14 @@ export function ProjectOverview() {
         <section aria-labelledby="about-h" className="rounded-2xl border bg-card p-5">
           <div className="mb-2 flex items-center justify-between">
             <h2 id="about-h" className="text-card-title">About</h2>
-            {permissions.canEditProject && !editing ? (
-              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit</Button>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {permissions.canEditProject && aiSlot ? (
+                <PlanDialog projectId={project.id} startDate={project.start_date ?? new Date().toISOString().slice(0, 10)} />
+              ) : null}
+              {permissions.canEditProject && !editing ? (
+                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit</Button>
+              ) : null}
+            </div>
           </div>
           {editing ? (
             <div className="space-y-2">
@@ -106,6 +124,13 @@ export function ProjectOverview() {
                         <span className="text-xs text-muted-foreground">{m.due_date ? `due ${m.due_date}` : "no due date"}</span>
                         {m.status === "completed" ? <span className="text-xs text-success-text">Completed</span> : null}
                       </div>
+                      {m.status === "open" && m.due_date ? (
+                        <p className={intel.forecasts[m.id]?.late ? "text-xs font-medium text-danger-text" : "text-xs text-muted-foreground"}>
+                          {intel.forecasts[m.id]?.forecast
+                            ? `Forecast: ${intel.forecasts[m.id]!.forecast}${intel.forecasts[m.id]!.late ? ` · late (due ${m.due_date})` : " · on track"}`
+                            : "Forecast: not enough history yet"}
+                        </p>
+                      ) : null}
                       {p ? (
                         <div className="flex items-center gap-2">
                           <Progress value={p.pct} className="h-1.5" aria-label={`${m.name} progress`} />
@@ -131,10 +156,11 @@ export function ProjectOverview() {
       </div>
 
       <aside className="space-y-6">
-        <section aria-labelledby="pulse-h" className="rounded-2xl border bg-card">
-          <h2 id="pulse-h" className="sr-only">Project Pulse</h2>
-          <EmptyState icon={Activity} title="Project Pulse arrives in Phase 3" description="An explainable 0–100 health score computed from this project's real tasks." compact as="h3" />
-        </section>
+        <PulseCard pulse={intel.pulse} basePath={basePath} updatedAt={intel.updatedAt} trend={intel.trend} />
+        <TopRisks risks={intel.risks} taskKeyById={intel.taskKeyById} basePath={basePath}>
+          {aiSlot ? <ExplainRisksButton projectId={project.id} /> : null}
+        </TopRisks>
+        {aiSlot}
         <section aria-labelledby="members-h" className="rounded-2xl border bg-card p-5">
           <h2 id="members-h" className="text-card-title mb-3">Members</h2>
           <ul className="space-y-2.5">

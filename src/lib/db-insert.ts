@@ -18,6 +18,7 @@ type ServerFilled = {
   attachments: "project_id" | "workspace_id";
   team_members: "workspace_id";
   project_members: "workspace_id";
+  task_dependencies: "workspace_id" | "project_id";
 };
 
 type Filled<T extends TableName> = T extends keyof ServerFilled ? ServerFilled[T] : never;

@@ -68,6 +68,10 @@ export function useProjectRealtime(projectId: string, me: Omit<PresenceUser, "vi
           refresh(row?.task_id);
           trigger();
         })
+        .on("postgres_changes", { event: "*", schema: "public", table: "task_dependencies", filter }, () => {
+          void qc.invalidateQueries({ queryKey: ["deps", projectId] });
+          trigger();
+        })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "activity_logs", filter }, (payload) => {
           // Ignore echoes of our own optimistic mutations (they're already in the cache).
           const meta = (payload.new as { metadata?: { client_mutation_id?: string } }).metadata;

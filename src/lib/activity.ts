@@ -64,6 +64,14 @@ export function describeActivity(log: ActivityLog, actorName: string): string {
       return `${who} removed ${String(m.user_name ?? "someone")} from **${String(m.project_name ?? "")}**`;
     case "project.member_role_changed":
       return `${who} made ${String(m.user_name ?? "someone")} ${label(PROJECT_ROLE_LABELS, m.to)} on **${String(m.project_name ?? "")}**`;
+    case "dependency.added":
+      return `${who} marked ${key} as blocked by **${String(m.blocker_key ?? "")}**`;
+    case "dependency.removed":
+      return `${who} removed the dependency of ${key} on **${String(m.blocker_key ?? "")}**`;
+    case "rebalance.applied":
+      return `${who} moved ${key} from ${String(m.from_name ?? "someone")} to ${String(m.to_name ?? "someone")} to balance workload`;
+    case "ai.applied":
+      return `${who} applied a ${String(m.kind ?? "").replace("_", " ")} suggestion (${String(m.count ?? 0)} items)`;
     case "member.joined":
       return `${String(m.user_name ?? who)} joined the workspace as ${label(ROLE_LABELS, m.role)}`;
     case "member.left":

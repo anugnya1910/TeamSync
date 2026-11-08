@@ -35,6 +35,8 @@ export default async function WorkspaceLayout({
           name: workspace.name,
           slug: workspace.slug,
           logoUrl: workspace.logo_url,
+          aiEnabled: workspace.ai_enabled,
+          gamificationEnabled: workspace.gamification_enabled,
         },
         role: membership.role,
         workspaces: workspaces.map((w) => ({

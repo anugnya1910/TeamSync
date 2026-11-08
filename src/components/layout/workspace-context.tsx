@@ -3,7 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { WorkspaceRole } from "@/lib/domain";
 
-export type ShellWorkspace = { id: string; name: string; slug: string; logoUrl: string | null };
+export type ShellWorkspace = { id: string; name: string; slug: string; logoUrl: string | null; aiEnabled?: boolean; gamificationEnabled?: boolean };
 export type ShellWorkspaceListItem = ShellWorkspace & { role: WorkspaceRole };
 export type ShellUser = {
   id: string;

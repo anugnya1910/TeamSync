@@ -10,6 +10,30 @@ export type Database = {
   };
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          code: string;
+          description: string;
+          icon: string;
+          name: string;
+          xp_reward: number;
+        };
+        Insert: {
+          code: string;
+          description: string;
+          icon: string;
+          name: string;
+          xp_reward?: number;
+        };
+        Update: {
+          code?: string;
+          description?: string;
+          icon?: string;
+          name?: string;
+          xp_reward?: number;
+        };
+        Relationships: [];
+      };
       activity_logs: {
         Row: {
           action: string;
@@ -71,6 +95,60 @@ export type Database = {
           },
           {
             foreignKeyName: "activity_logs_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_requests: {
+        Row: {
+          action: string;
+          created_at: string;
+          id: string;
+          input_tokens: number | null;
+          latency_ms: number | null;
+          output_tokens: number | null;
+          source: string;
+          status: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          output_tokens?: number | null;
+          source: string;
+          status: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          output_tokens?: number | null;
+          source?: string;
+          status?: string;
+          user_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_requests_workspace_id_fkey";
             columns: ["workspace_id"];
             isOneToOne: false;
             referencedRelation: "workspaces";
@@ -431,6 +509,72 @@ export type Database = {
           },
         ];
       };
+      project_health_snapshots: {
+        Row: {
+          band: string;
+          blocked_tasks: number;
+          completed_effort: number;
+          created_at: string;
+          factors: Json;
+          id: string;
+          open_tasks: number;
+          overdue_tasks: number;
+          project_id: string;
+          remaining_effort: number;
+          score: number | null;
+          snapshot_date: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        Insert: {
+          band: string;
+          blocked_tasks?: number;
+          completed_effort?: number;
+          created_at?: string;
+          factors?: Json;
+          id?: string;
+          open_tasks?: number;
+          overdue_tasks?: number;
+          project_id: string;
+          remaining_effort?: number;
+          score?: number | null;
+          snapshot_date: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          band?: string;
+          blocked_tasks?: number;
+          completed_effort?: number;
+          created_at?: string;
+          factors?: Json;
+          id?: string;
+          open_tasks?: number;
+          overdue_tasks?: number;
+          project_id?: string;
+          remaining_effort?: number;
+          score?: number | null;
+          snapshot_date?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "project_health_snapshots_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_health_snapshots_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       project_members: {
         Row: {
           added_at: string;
@@ -656,6 +800,58 @@ export type Database = {
           {
             foreignKeyName: "task_assignees_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      task_dependencies: {
+        Row: {
+          blocked_task_id: string;
+          blocker_task_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          blocked_task_id: string;
+          blocker_task_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          blocked_task_id?: string;
+          blocker_task_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          project_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_blocked_task_id_fkey";
+            columns: ["blocked_task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_dependencies_blocker_task_id_fkey";
+            columns: ["blocker_task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_dependencies_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -944,6 +1140,182 @@ export type Database = {
           },
         ];
       };
+      user_achievements: {
+        Row: {
+          achievement_code: string;
+          unlocked_at: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          achievement_code: string;
+          unlocked_at?: string;
+          user_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          achievement_code?: string;
+          unlocked_at?: string;
+          user_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_code_fkey";
+            columns: ["achievement_code"];
+            isOneToOne: false;
+            referencedRelation: "achievements";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_achievements_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_streaks: {
+        Row: {
+          current_streak: number;
+          last_active_date: string | null;
+          longest_streak: number;
+          user_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          current_streak?: number;
+          last_active_date?: string | null;
+          longest_streak?: number;
+          user_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          current_streak?: number;
+          last_active_date?: string | null;
+          longest_streak?: number;
+          user_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_streaks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_streaks_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workload_recommendations: {
+        Row: {
+          created_at: string;
+          details: Json;
+          from_user_id: string;
+          id: string;
+          imbalance_after: number;
+          imbalance_before: number;
+          project_id: string;
+          reason: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: string;
+          task_id: string;
+          to_user_id: string;
+          workspace_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          details?: Json;
+          from_user_id: string;
+          id?: string;
+          imbalance_after: number;
+          imbalance_before: number;
+          project_id: string;
+          reason: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          task_id: string;
+          to_user_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          details?: Json;
+          from_user_id?: string;
+          id?: string;
+          imbalance_after?: number;
+          imbalance_before?: number;
+          project_id?: string;
+          reason?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: string;
+          task_id?: string;
+          to_user_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "workload_recommendations_from_user_id_fkey";
+            columns: ["from_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workload_recommendations_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workload_recommendations_resolved_by_fkey";
+            columns: ["resolved_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workload_recommendations_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "tasks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workload_recommendations_to_user_id_fkey";
+            columns: ["to_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workload_recommendations_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workspace_invitations: {
         Row: {
           created_at: string;
@@ -1087,19 +1459,127 @@ export type Database = {
           },
         ];
       };
+      xp_events: {
+        Row: {
+          created_at: string;
+          event_type: string;
+          id: number;
+          metadata: Json;
+          source_id: string;
+          source_type: string;
+          user_id: string;
+          workspace_id: string;
+          xp: number;
+        };
+        Insert: {
+          created_at?: string;
+          event_type: string;
+          id?: number;
+          metadata?: Json;
+          source_id: string;
+          source_type: string;
+          user_id: string;
+          workspace_id: string;
+          xp: number;
+        };
+        Update: {
+          created_at?: string;
+          event_type?: string;
+          id?: number;
+          metadata?: Json;
+          source_id?: string;
+          source_type?: string;
+          user_id?: string;
+          workspace_id?: string;
+          xp?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "xp_events_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "xp_events_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
-      [_ in never]: never;
+      v_member_stats: {
+        Row: {
+          current_streak: number | null;
+          level: number | null;
+          longest_streak: number | null;
+          on_time_count: number | null;
+          tasks_completed: number | null;
+          total_xp: number | null;
+          user_id: string | null;
+          workspace_id: string | null;
+        };
+        Relationships: [];
+      };
+      v_task_effective: {
+        Row: {
+          blocked_reason: string | null;
+          blocking_open_count: number | null;
+          completed_at: string | null;
+          created_at: string | null;
+          created_by: string | null;
+          deleted_at: string | null;
+          description: string | null;
+          due_date: string | null;
+          effectively_blocked: boolean | null;
+          effort_points: number | null;
+          id: string | null;
+          is_blocked: boolean | null;
+          milestone_id: string | null;
+          number: number | null;
+          open_blocker_count: number | null;
+          parent_task_id: string | null;
+          position: number | null;
+          priority: Database["public"]["Enums"]["task_priority"] | null;
+          project_id: string | null;
+          search_vector: unknown | null;
+          start_date: string | null;
+          status: Database["public"]["Enums"]["task_status"] | null;
+          title: string | null;
+          updated_at: string | null;
+          workspace_id: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       _unassign_open_tasks: { Args: { p_workspace: string; p_user: string }; Returns: undefined };
       accept_invitation: { Args: { p_token: string }; Returns: Database["public"]["Tables"]["workspaces"]["Row"] };
+      active_projects_page: { Args: { p_after: string; p_limit?: number }; Returns: {
+          id: string;
+          workspace_id: string;
+        }[] };
       actor_name: { Args: never; Returns: string };
+      ai_day_start: { Args: never; Returns: string };
+      ai_requests_today_global: { Args: never; Returns: number };
+      apply_workload_recommendation: { Args: { p_id: string }; Returns: Database["public"]["Tables"]["tasks"]["Row"] };
       bulk_update_tasks: { Args: { p_ids: string[]; p_patch: Json }; Returns: number };
       can_edit_project_content: { Args: { p: string }; Returns: boolean };
       can_view_project: { Args: { p: string }; Returns: boolean };
       change_member_role: { Args: { p_workspace: string; p_user: string; p_role: Database["public"]["Enums"]["workspace_role"] }; Returns: undefined };
+      check_achievements: { Args: { p_user: string; p_workspace: string }; Returns: undefined };
       complete_onboarding: { Args: { p_full_name: string; p_job_title: string; p_timezone: string; p_avatar_url: string }; Returns: Database["public"]["Tables"]["profiles"]["Row"] };
+      consume_ai_quota: { Args: { p_workspace: string; p_action: string }; Returns: {
+          allowed: boolean;
+          reason: string;
+          user_remaining: number;
+          workspace_remaining: number;
+          request_id: string;
+        }[] };
       create_invitation: { Args: { p_workspace: string; p_role: Database["public"]["Enums"]["workspace_role"]; p_email?: string; p_max_uses?: number; p_expires_days?: number }; Returns: {
           invitation_id: string;
           token: string;
@@ -1109,8 +1589,11 @@ export type Database = {
       delete_project: { Args: { p_project: string }; Returns: undefined };
       delete_task: { Args: { p_task: string }; Returns: undefined };
       delete_workspace: { Args: { p_workspace: string; p_confirm_slug: string }; Returns: undefined };
+      dismiss_workload_recommendation: { Args: { p_id: string }; Returns: undefined };
       duplicate_task: { Args: { p_task: string }; Returns: Database["public"]["Tables"]["tasks"]["Row"] };
       extract_mention_handles: { Args: { p_body: string }; Returns: string[] };
+      finish_ai_request: { Args: { p_id: string; p_source: string; p_status: string; p_in: number; p_out: number; p_latency: number }; Returns: undefined };
+      gamification_on: { Args: { p_workspace: string }; Returns: boolean };
       generate_due_notifications: { Args: { p_date: string }; Returns: {
           due_soon: number;
           overdue: number;
@@ -1125,28 +1608,50 @@ export type Database = {
           email_bound: boolean;
           already_member: boolean;
         }[] };
+      get_leaderboard: { Args: { p_workspace: string; p_period?: string }; Returns: {
+          user_id: string;
+          full_name: string;
+          avatar_url: string;
+          xp: number;
+          level: number;
+          current_streak: number;
+          tasks_completed: number;
+          rank: number;
+          is_self: boolean;
+        }[] };
       handle_base_from_email: { Args: { p_email: string }; Returns: string };
       hash_invite_token: { Args: { p_token: string }; Returns: string };
       health_check: { Args: never; Returns: string };
+      insert_xp: { Args: { p_workspace: string; p_user: string; p_source_type: string; p_source: string; p_event: string; p_xp: number; p_meta?: Json }; Returns: number };
       invitation_effective_status: { Args: { i: string }; Returns: Database["public"]["Enums"]["invite_status"] };
       is_handle_available: { Args: { p_handle: string }; Returns: boolean };
       is_project_key_available: { Args: { p_workspace: string; p_key: string }; Returns: boolean };
       is_project_lead: { Args: { p: string }; Returns: boolean };
+      is_service_role: { Args: never; Returns: boolean };
       is_slug_available: { Args: { p_slug: string }; Returns: boolean };
       is_workspace_admin: { Args: { ws: string }; Returns: boolean };
       is_workspace_member: { Args: { ws: string }; Returns: boolean };
       leave_workspace: { Args: { p_workspace: string }; Returns: undefined };
+      level_for_xp: { Args: { p_xp: number }; Returns: number };
       log_activity: { Args: { p_workspace: string; p_project: string; p_task: string; p_action: string; p_entity_type: string; p_entity_id: string; p_metadata: Json }; Returns: undefined };
+      log_ai_applied: { Args: { p_project: string; p_kind: string; p_count: number }; Returns: undefined };
+      log_ai_fallback: { Args: { p_workspace: string; p_action: string; p_status: string }; Returns: string };
       mark_all_notifications_read: { Args: { p_workspace?: string }; Returns: number };
       move_task: { Args: { p_task: string; p_status: Database["public"]["Enums"]["task_status"]; p_before?: number; p_after?: number; p_override_reason?: string; p_client_mutation_id?: string }; Returns: Database["public"]["Tables"]["tasks"]["Row"] };
       notify: { Args: { p_user: string; p_workspace: string; p_type: Database["public"]["Enums"]["notification_type"]; p_title: string; p_body: string; p_link: string; p_entity: string }; Returns: undefined };
       project_role_of: { Args: { p: string }; Returns: Database["public"]["Enums"]["project_role"] };
       project_template: { Args: { p_template: string }; Returns: Json };
+      prune_old_data: { Args: never; Returns: {
+          activity_deleted: number;
+          notifications_deleted: number;
+          ai_requests_deleted: number;
+        }[] };
       remove_member: { Args: { p_workspace: string; p_user: string }; Returns: undefined };
       remove_project_member: { Args: { p_project: string; p_user: string }; Returns: undefined };
       restore_project: { Args: { p_project: string }; Returns: undefined };
       restore_task: { Args: { p_task: string }; Returns: undefined };
       revoke_invitation: { Args: { p_id: string }; Returns: undefined };
+      save_workload_recommendations: { Args: { p_project: string; p_items: Json }; Returns: number };
       search_workspace: { Args: { p_workspace: string; p_query: string; p_limit?: number }; Returns: {
           kind: string;
           id: string;
@@ -1168,6 +1673,9 @@ export type Database = {
       task_link: { Args: { p_task: string }; Returns: string };
       transfer_ownership: { Args: { p_workspace: string; p_new_owner: string }; Returns: undefined };
       try_uuid: { Args: { p: string }; Returns: string };
+      update_streak: { Args: { p_user: string; p_workspace: string }; Returns: undefined };
+      upsert_health_snapshot: { Args: { p_project: string; p_date: string; p_score: number; p_band: string; p_factors: Json; p_stats: Json }; Returns: Database["public"]["Tables"]["project_health_snapshots"]["Row"] };
+      user_local_date: { Args: { p_user: string }; Returns: string };
       workspace_role_of: { Args: { ws: string }; Returns: Database["public"]["Enums"]["workspace_role"] };
     };
     Enums: {

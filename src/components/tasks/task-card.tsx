@@ -32,10 +32,14 @@ type Props = {
   dragging?: boolean;
   overlay?: boolean;
   menu?: React.ReactNode;
+  /** Keys of open tasks blocking this one (effective blocked, spec §B.12) */
+  blockedBy?: string[];
 };
 
 /** Board card per spec §B.9. Memoised: re-renders only when its task changes. */
-export const TaskCard = memo(function TaskCard({ task, projectKey, memberById, labelsById, subtasks, today, dragging, overlay, menu }: Props) {
+export const TaskCard = memo(function TaskCard({ task, projectKey, memberById, labelsById, subtasks, today, dragging, overlay, menu, blockedBy = [] }: Props) {
+  const blocked = task.is_blocked || blockedBy.length > 0;
+  const blockedTitle = [task.is_blocked ? `Marked blocked${task.blocked_reason ? `: ${task.blocked_reason}` : ""}` : null, blockedBy.length ? `Waiting on ${blockedBy.join(", ")}` : null].filter(Boolean).join(" · ");
   const labels = task.labelIds.map((id) => labelsById.get(id)).filter((l): l is Tables<"labels"> => Boolean(l));
   const people = task.assigneeIds
     .map((id) => memberById.get(id))
@@ -49,16 +53,17 @@ export const TaskCard = memo(function TaskCard({ task, projectKey, memberById, l
         "group relative space-y-2 rounded-lg border bg-card p-2.5 text-left shadow-[var(--shadow-e1)] transition-shadow",
         dragging && "opacity-40",
         overlay && "rotate-2 shadow-[var(--shadow-e3)] ring-2 ring-primary/40",
-        task.is_blocked && "border-danger/40",
+        blocked && "border-danger/40",
       )}
     >
       <div className="flex items-center gap-1.5">
         <span className="font-tabular text-[11px] text-muted-foreground">
           {projectKey}-{task.number}
         </span>
-        {task.is_blocked ? (
-          <span className="inline-flex items-center gap-0.5 rounded bg-danger/10 px-1 text-[10px] font-semibold text-danger-text">
-            <AlertOctagon className="size-3" aria-hidden /> Blocked
+        {blocked ? (
+          <span className="inline-flex items-center gap-0.5 rounded bg-danger/10 px-1 text-[10px] font-semibold text-danger-text" title={blockedTitle}>
+            <AlertOctagon className="size-3" aria-hidden /> 🔒 Blocked
+            <span className="sr-only">. {blockedTitle}</span>
           </span>
         ) : null}
         <span className="ml-auto flex items-center gap-1">
