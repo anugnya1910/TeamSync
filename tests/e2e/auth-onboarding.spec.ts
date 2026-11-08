@@ -20,7 +20,7 @@ test.describe("sign up → onboarding → dashboard → logout → login", () =>
     if (isMobile) {
       await page.getByRole("button", { name: "Menu" }).click();
     }
-    await page.getByRole("button", { name: /account menu/i }).first().click();
+    await page.getByRole("button", { name: /ananya rao/i }).first().click();
     await page.getByRole("menuitem", { name: /sign out/i }).click();
     await page.waitForURL((u) => u.pathname === "/");
 

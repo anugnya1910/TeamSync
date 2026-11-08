@@ -40,7 +40,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
         <Button
           variant="ghost"
           className={cn("h-auto w-full justify-start gap-2.5 px-2 py-1.5", collapsed && "justify-center px-0")}
-          aria-label={`Switch workspace (current: ${workspace.name})`}
+          aria-label={collapsed ? `Switch workspace (current: ${workspace.name})` : undefined}
         >
           <WorkspaceBadge name={workspace.name} />
           {!collapsed ? (

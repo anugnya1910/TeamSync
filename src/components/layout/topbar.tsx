@@ -70,7 +70,6 @@ export function Topbar() {
         variant="outline"
         className="hidden h-8 w-56 justify-between px-2.5 text-muted-foreground md:inline-flex"
         onClick={() => setPaletteOpen(true)}
-        aria-label="Search and commands"
         aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
       >
         <span className="flex items-center gap-2">

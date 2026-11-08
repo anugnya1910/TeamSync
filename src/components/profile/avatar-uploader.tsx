@@ -94,6 +94,8 @@ export function AvatarUploader({ userId, name, value, onChange }: Props) {
           accept="image/png,image/jpeg,image/webp"
           className="sr-only"
           id={`avatar-${userId}`}
+          aria-label="Upload profile photo"
+          tabIndex={-1}
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void handleFile(f);

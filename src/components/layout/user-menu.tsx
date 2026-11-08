@@ -32,7 +32,7 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
         <Button
           variant="ghost"
           className={cn("h-auto w-full justify-start gap-2.5 px-2 py-1.5", collapsed && "justify-center px-0")}
-          aria-label={`Account menu for ${user.fullName}`}
+          aria-label={collapsed ? `Account menu for ${user.fullName}` : undefined}
         >
           <Avatar className="size-7 border">
             {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
