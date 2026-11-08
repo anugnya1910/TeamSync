@@ -1,0 +1,12 @@
+title = "TeamSync gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local-only demo credentials and test fixtures (documented in supabase/README.md)"
+paths = [
+  '''supabase/seed\.sql''',
+  '''supabase/README\.md''',
+  '''tests/e2e/helpers\.ts''',
+]

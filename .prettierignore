@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+playwright-report
+test-results
+package-lock.json
+src/types/database.ts
+supabase/.temp
+docs/planning
+src/components/ui

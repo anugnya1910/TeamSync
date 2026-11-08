@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Dummy public values for build-only jobs (no secrets are needed to compile).
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder
+  NEXT_PUBLIC_APP_URL: http://localhost:3100
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  quality:
+    name: Lint · typecheck · unit tests · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run build
+      - name: Service-role key absent from client bundle
+        run: |
+          if grep -r "service_role" .next/static; then
+            echo "::error::service_role found in client bundle"; exit 1
+          fi
+          echo "OK: no service role in client bundle"
+      - name: Production dependency audit (high/critical)
+        run: npm audit --omit=dev --audit-level=high
+
+  database:
+    name: Supabase migrations + pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Start local Supabase (applies migrations + seed)
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+      - name: pgTAP suites
+        run: npx supabase test db
+      - name: RLS audit — every public table has RLS
+        run: |
+          docker exec $(docker ps --filter name=supabase_db -q | head -1) psql -U postgres -tAc \
+            "select tablename from pg_tables where schemaname='public' and rowsecurity = false" | tee /tmp/no_rls.txt
+          if [ -s /tmp/no_rls.txt ]; then echo "::error::tables without RLS"; exit 1; fi
+          docker exec $(docker ps --filter name=supabase_db -q | head -1) psql -U postgres -tAc \
+            "select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and prosecdef and (proconfig is null or not exists (select 1 from unnest(proconfig) c where c like 'search_path=%'))" | tee /tmp/no_sp.txt
+          if [ -s /tmp/no_sp.txt ]; then echo "::error::SECURITY DEFINER functions without search_path"; exit 1; fi
+      - name: Generated types match the app (drift check)
+        run: |
+          npx supabase gen types typescript --local > src/types/database.ts
+          npm run typecheck
+          git --no-pager diff --stat -- src/types/database.ts || true
+
+  e2e:
+    name: Playwright (real Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Start local Supabase
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+      - name: Export Supabase env for the app
+        run: |
+          npx supabase status -o env > /tmp/sb.env
+          API_URL=$(grep -E '^API_URL=' /tmp/sb.env | cut -d= -f2- | tr -d '"')
+          ANON=$(grep -E '^(ANON_KEY|PUBLISHABLE_KEY)=' /tmp/sb.env | head -1 | cut -d= -f2- | tr -d '"')
+          echo "::add-mask::$ANON"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON" >> "$GITHUB_ENV"
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - name: E2E
+        run: npm run test:e2e
+        env:
+          E2E_SUPABASE: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
