@@ -160,8 +160,8 @@
   --chart-1: #4f46e5;
   --chart-2: #ff5a3c;
   --chart-3: #12a150;
-  --chart-4: #0ea5e9;
-  --chart-5: #8b5cf6;
+  --chart-4: #0284c7;
+  --chart-5: #c2357f;
 
   --font-display: var(--font-bricolage);
   --grain-opacity: 0.02;
@@ -215,11 +215,11 @@
   --priority-low: #94a3b8;
   --priority-none: #6b7280;
 
-  --chart-1: #7c83ff;
-  --chart-2: #ff7a5f;
-  --chart-3: #34d399;
-  --chart-4: #38bdf8;
-  --chart-5: #a78bfa;
+  --chart-1: #6d74f5;
+  --chart-2: #e8613f;
+  --chart-3: #22a565;
+  --chart-4: #1a8fcf;
+  --chart-5: #d04f9a;
 
   --grain-opacity: 0.03;
   color-scheme: dark;
@@ -337,4 +337,16 @@ html[data-reduced-motion="true"] *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.1s !important;
   scroll-behavior: auto !important;
+}
+
+/* "+N XP" micro-feedback (spec §B.23); reduced motion shows it without movement. */
+@keyframes xp-float {
+  0% { opacity: 0; transform: translateY(4px); }
+  15% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+.xp-float { animation: xp-float 2.2s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .xp-float { animation: none; }
 }

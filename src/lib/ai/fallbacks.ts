@@ -15,10 +15,29 @@ const FAMILIES: { match: RegExp; steps: string[] }[] = [
 ];
 const DEFAULT_STEPS = ["Research", "Implement", "Test", "Document", "Review"];
 
-/** Splits an effort total into `n` parts that are all valid estimates (1,2,3,5,8,13). */
+/**
+ * Splits an effort total into `n` valid estimates (1,2,3,5,8,13) that sum to `total` whenever
+ * that is possible, preferring the most even split; otherwise the closest achievable sum.
+ * n ≤ 5, so an exhaustive search over non-increasing combinations is tiny.
+ */
 export function splitEffort(total: number, n: number): number[] {
-  const parts = Array.from({ length: n }, (_, i) => Math.floor(total / n) + (i < total % n ? 1 : 0));
-  return parts.map((p) => (EFFORTS as readonly number[]).includes(p) ? p : (EFFORTS.filter((e) => e <= p).at(-1) ?? 1));
+  const E = [...EFFORTS].sort((a, b) => b - a);
+  let best: number[] | null = null;
+  let bestKey: [number, number] = [Infinity, Infinity];
+  const walk = (parts: number[], from: number) => {
+    if (parts.length === n) {
+      const sum = parts.reduce((s, p) => s + p, 0);
+      const key: [number, number] = [Math.abs(sum - total), parts[0]! - parts[parts.length - 1]!];
+      if (key[0] < bestKey[0] || (key[0] === bestKey[0] && key[1] < bestKey[1])) {
+        best = [...parts];
+        bestKey = key;
+      }
+      return;
+    }
+    for (let i = from; i < E.length; i++) walk([...parts, E[i]!], i);
+  };
+  walk([], 0);
+  return best ?? Array.from({ length: n }, () => 1);
 }
 
 export function breakdownFallback(title: string, description: string | null, parentEffort: number | null): BreakdownOut {

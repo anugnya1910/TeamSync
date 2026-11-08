@@ -56,6 +56,8 @@ export type ProjectCard = Tables<"projects"> & {
   totalEffort: number;
   doneEffort: number;
   taskCount: number;
+  /** Latest daily Pulse snapshot (last 7 days), null when none yet */
+  pulse: { score: number | null; date: string } | null;
   memberIds: { user_id: string; profile: { full_name: string; avatar_url: string | null } }[];
 };
 
@@ -72,11 +74,14 @@ export async function listProjects(workspaceId: string, opts: { includeArchived?
   const { data: projects } = await q;
   if (!projects?.length) return [];
 
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("project_id, status, effort_points, parent_task_id")
-    .in("project_id", projects.map((p) => p.id))
-    .neq("status", "cancelled");
+  const ids = projects.map((p) => p.id);
+  const since = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+  const [{ data: tasks }, { data: snaps }] = await Promise.all([
+    supabase.from("tasks").select("project_id, status, effort_points, parent_task_id").in("project_id", ids).neq("status", "cancelled"),
+    supabase.from("project_health_snapshots").select("project_id, snapshot_date, score").in("project_id", ids).gte("snapshot_date", since).order("snapshot_date", { ascending: false }),
+  ]);
+  const latest = new Map<string, { score: number | null; date: string }>();
+  for (const s of snaps ?? []) if (!latest.has(s.project_id)) latest.set(s.project_id, { score: s.score, date: s.snapshot_date });
 
   const agg = new Map<string, { total: number; done: number; count: number }>();
   for (const t of tasks ?? []) {
@@ -99,6 +104,7 @@ export async function listProjects(workspaceId: string, opts: { includeArchived?
       totalEffort: a.total,
       doneEffort: a.done,
       taskCount: a.count,
+      pulse: latest.get(p.id) ?? null,
       memberIds: (project_members ?? [])
         .filter((m) => m.profile)
         .map((m) => ({ user_id: m.user_id, profile: m.profile! })),

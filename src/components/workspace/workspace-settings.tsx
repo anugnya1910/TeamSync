@@ -4,18 +4,78 @@ import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { deleteWorkspace, transferOwnership, updateWorkspace } from "@/app/(app)/w/[workspaceSlug]/_actions/workspace";
+import { deleteWorkspace, transferOwnership, updateWorkspace, updateWorkspaceFeatures } from "@/app/(app)/w/[workspaceSlug]/_actions/workspace";
 import { useWorkspace } from "@/components/layout/workspace-context";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlugStatusMessage } from "@/components/workspace/slug-status";
 import { useSlugAvailability } from "@/hooks/use-slug-availability";
 import { ROLE_LABELS } from "@/lib/domain";
 
-export function WorkspaceSettings({ members }: { members: { user_id: string; role: string; full_name: string }[] }) {
+type Features = { aiEnabled: boolean; gamificationEnabled: boolean; aiDailyLimit: number };
+
+function FeaturesCard({ initial }: { initial: Features }) {
+  const { workspace } = useWorkspace();
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [f, setF] = useState(initial);
+  const dirty = f.aiEnabled !== initial.aiEnabled || f.gamificationEnabled !== initial.gamificationEnabled || f.aiDailyLimit !== initial.aiDailyLimit;
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        start(async () => {
+          const res = await updateWorkspaceFeatures({ workspaceId: workspace.id, ...f });
+          if (!res.ok) return void toast.error(res.error.message);
+          toast.success("Saved");
+          router.refresh();
+        });
+      }}
+    >
+      <SettingsCard title="Features" footer={<Button type="submit" disabled={pending || !dirty}>Save</Button>}>
+        <div className="space-y-5">
+          <div className="flex items-start gap-3">
+            <Switch id="ws-ai" checked={f.aiEnabled} onCheckedChange={(v) => setF((x) => ({ ...x, aiEnabled: v }))} />
+            <div className="space-y-1 text-sm">
+              <label htmlFor="ws-ai" className="font-medium">AI assistant</label>
+              <p className="text-xs text-muted-foreground">
+                Task breakdowns, project summaries, plan drafts and priority suggestions. When on, the task titles and descriptions, project and milestone
+                names and computed project statistics needed for a request are sent to Google Gemini (free tier); people&apos;s names, emails and
+                attachments are never sent. Without an API
+                key, or when the daily limit is reached, TeamSync uses built-in rules instead — results are labelled “Rules-based”.
+              </p>
+              <label className="mt-2 flex items-center gap-2 text-xs">
+                <span>AI requests per day for the workspace</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1000}
+                  value={f.aiDailyLimit}
+                  disabled={!f.aiEnabled}
+                  onChange={(e) => setF((x) => ({ ...x, aiDailyLimit: Number(e.target.value) }))}
+                  className="h-7 w-20 text-xs"
+                />
+              </label>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Switch id="ws-gam" checked={f.gamificationEnabled} onCheckedChange={(v) => setF((x) => ({ ...x, gamificationEnabled: v }))} />
+            <div className="space-y-1 text-sm">
+              <label htmlFor="ws-gam" className="font-medium">Gamification</label>
+              <p className="text-xs text-muted-foreground">XP, levels, streaks, achievements and the leaderboard. Turning it off hides them and stops new XP; earned XP is kept.</p>
+            </div>
+          </div>
+        </div>
+      </SettingsCard>
+    </form>
+  );
+}
+
+export function WorkspaceSettings({ members, features }: { members: { user_id: string; role: string; full_name: string }[]; features: Features }) {
   const { workspace, role } = useWorkspace();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -76,6 +136,8 @@ export function WorkspaceSettings({ members }: { members: { user_id: string; rol
           </div>
         </SettingsCard>
       </form>
+
+      <FeaturesCard initial={features} />
 
       {isOwner ? (
         <SettingsCard title="Danger zone" tone="danger" description="These actions affect everyone in the workspace.">

@@ -14,6 +14,7 @@ import {
   memberRefSchema,
   teamSchema,
   updateWorkspaceSchema,
+  workspaceFeaturesSchema,
   uuidSchema,
 } from "@/lib/validation/phase2";
 
@@ -119,6 +120,22 @@ export async function updateWorkspace(input: z.input<typeof updateWorkspaceSchem
     if (!ws) return fail("FORBIDDEN", "Only owners and admins can change workspace settings.");
     revalidatePath("/", "layout");
     return ok({ slug: ws.slug });
+  });
+}
+
+/** AI + gamification switches (owner/admin; column grants + RLS enforce it in the database). */
+export async function updateWorkspaceFeatures(input: z.input<typeof workspaceFeaturesSchema>): Promise<ActionResult<null>> {
+  return withSession(workspaceFeaturesSchema, input, async ({ data, supabase }) => {
+    const { data: ws, error } = await supabase
+      .from("workspaces")
+      .update({ ai_enabled: data.aiEnabled, gamification_enabled: data.gamificationEnabled, ai_daily_limit: data.aiDailyLimit })
+      .eq("id", data.workspaceId)
+      .select("id")
+      .maybeSingle();
+    if (error) return pgFail(error);
+    if (!ws) return fail("FORBIDDEN", "Only owners and admins can change workspace settings.");
+    revalidatePath("/", "layout");
+    return ok(null);
   });
 }
 

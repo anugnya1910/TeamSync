@@ -19,8 +19,8 @@ export default async function WorkspaceSettingsPage({ params }: PageProps<"/w/[w
   const members = (data ?? []).map((m) => ({ user_id: m.user_id, role: m.role, full_name: m.profile.full_name }));
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Workspace settings" description="AI and gamification settings arrive with those features in Phase 3." />
-      <WorkspaceSettings members={members} />
+      <PageHeader title="Workspace settings" description="General details, optional AI assistance and gamification for everyone in this workspace." />
+      <WorkspaceSettings members={members} features={{ aiEnabled: workspace.ai_enabled, gamificationEnabled: workspace.gamification_enabled, aiDailyLimit: workspace.ai_daily_limit }} />
     </div>
   );
 }

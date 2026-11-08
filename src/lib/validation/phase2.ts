@@ -29,6 +29,13 @@ export const updateWorkspaceSchema = z.object({
   slug: slugSchema,
 });
 
+export const workspaceFeaturesSchema = z.object({
+  workspaceId: uuidSchema,
+  aiEnabled: z.boolean(),
+  gamificationEnabled: z.boolean(),
+  aiDailyLimit: z.coerce.number().int().min(0).max(1000),
+});
+
 export const deleteWorkspaceSchema = z.object({ workspaceId: uuidSchema, confirmSlug: z.string().min(1) });
 
 export const teamSchema = z.object({

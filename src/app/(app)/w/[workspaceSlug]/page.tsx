@@ -3,8 +3,10 @@ import { addDays, format } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, CircleCheck, Circle, Diamond, FolderKanban, Sparkles, Target } from "lucide-react";
+import { CalendarClock, CircleCheck, Circle, Diamond, FolderKanban, Target } from "lucide-react";
 import { EmptyState } from "@/components/brand/empty-state";
+import { PulseRing } from "@/components/brand/pulse-ring";
+import { MyWeekCard } from "@/components/insights/my-week-card";
 import { PriorityIcon } from "@/components/brand/priority-icon";
 import { StatusIcon } from "@/components/brand/status-icon";
 import { ColorDot, ProjectIcon } from "@/components/common/visuals";
@@ -15,6 +17,7 @@ import { ROLE_LABELS } from "@/lib/domain";
 import { getMyOpenTasks } from "@/lib/data/my-tasks";
 import { listProjects } from "@/lib/data/project";
 import { getMyWorkspaces, getWorkspaceBySlug, requireProfile } from "@/lib/data/session";
+import { buildMyWeek } from "@/lib/intelligence/my-week";
 import { createClient } from "@/lib/supabase/server";
 import { dueBucket } from "@/lib/filters";
 import { firstName, greetingFor, longDate, pluralize, shortDate } from "@/lib/utils/format";
@@ -51,6 +54,33 @@ export default async function DashboardPage({ params }: PageProps<"/w/[workspace
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id).eq("status", "done"),
     supabase.from("workspace_invitations").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
   ]);
+
+  // My week (spec §B.24): only my own completions, streak and open due dates.
+  const since90 = new Date(now.getTime() - 90 * 86_400_000).toISOString();
+  const [{ data: myDone }, { data: myStreak }, { data: myMembership }] = await Promise.all([
+    supabase
+      .from("task_assignees")
+      .select("task:tasks!inner(completed_at, effort_points, due_date, status, parent_task_id, deleted_at)")
+      .eq("user_id", profile.id)
+      .eq("workspace_id", workspace.id)
+      .eq("task.status", "done")
+      .is("task.deleted_at", null)
+      .gte("task.completed_at", since90)
+      .limit(2000),
+    supabase.from("user_streaks").select("current_streak, longest_streak").eq("user_id", profile.id).eq("workspace_id", workspace.id).maybeSingle(),
+    supabase.from("workspace_members").select("joined_at").eq("user_id", profile.id).eq("workspace_id", workspace.id).maybeSingle(),
+  ]);
+  type DoneRow = { task: { completed_at: string | null; effort_points: number | null; due_date: string | null } };
+  const myWeek = buildMyWeek({
+    today,
+    weekStartsOn: profile.week_start === 0 ? 0 : 1,
+    completed: ((myDone ?? []) as unknown as DoneRow[])
+      .filter((r) => r.task.completed_at)
+      .map((r) => ({ date: formatInTimeZone(new Date(r.task.completed_at!), tz, "yyyy-MM-dd"), effort: r.task.effort_points, dueDate: r.task.due_date })),
+    historyStart: myMembership?.joined_at ? formatInTimeZone(new Date(myMembership.joined_at), tz, "yyyy-MM-dd") : today,
+    streak: workspace.gamification_enabled && myStreak ? { current: myStreak.current_streak, longest: myStreak.longest_streak } : null,
+    openDue: myTasks.map((t) => t.due_date),
+  });
 
   const focus = myTasks
     .filter((t) => t.status === "in_progress" || ["overdue", "today"].includes(dueBucket(t.due_date, today)))
@@ -141,7 +171,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[workspace
                     <span className="flex items-center gap-2.5">
                       <ProjectIcon icon={p.icon} color={p.color} name={p.name} />
                       <span className="min-w-0 flex-1 truncate font-semibold">{p.name}</span>
-                      <span className="text-[10px] text-muted-foreground" title="Project Pulse arrives in Phase 3">Pulse · P3</span>
+                      <PulseRing score={p.pulse?.score ?? null} size="xs" animated={false} />
                     </span>
                     {pct === null ? (
                       <span className="block text-xs text-muted-foreground">No tasks yet</span>
@@ -190,9 +220,7 @@ export default async function DashboardPage({ params }: PageProps<"/w/[workspace
               <p className="text-sm text-muted-foreground">No milestones due in the next 14 days.</p>
             )}
           </section>
-          <section aria-label="My week" className="rounded-2xl border bg-card">
-            <EmptyState icon={Sparkles} title="My week" description="Completed work, on-time rate and streaks from your own history arrive in Phase 3." compact as="h2" />
-          </section>
+          <MyWeekCard week={myWeek} myTasksHref={`/w/${workspace.slug}/my-tasks`} />
         </div>
       </div>
     </div>

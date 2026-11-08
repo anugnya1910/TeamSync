@@ -11,6 +11,9 @@ export type AiResult<T> = {
   [k: string]: unknown;
 };
 
+/** Mirrors `v_user_limit` in consume_ai_quota (supabase/migrations/…_p3_ai.sql). */
+export const AI_USER_DAILY_LIMIT = 20;
+
 export const REASON_LABEL: Record<string, string> = {
   not_configured: "AI isn't configured on this server",
   disabled: "AI is turned off for this workspace",

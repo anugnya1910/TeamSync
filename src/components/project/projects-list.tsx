@@ -112,7 +112,7 @@ export function ProjectsList({ projects }: { projects: ProjectCard[] }) {
                         <span className="block truncate font-semibold group-hover:underline">{p.name}</span>
                         <span className="font-tabular text-xs text-muted-foreground">{p.key}</span>
                       </span>
-                      <PulseRing score={null} size="xs" />
+                      <PulseRing score={p.pulse?.score ?? null} size="xs" animated={false} />
                     </span>
                     <span className="flex items-center gap-2">
                       <ProjectStatusPill status={p.status} />

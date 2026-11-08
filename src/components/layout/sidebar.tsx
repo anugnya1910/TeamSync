@@ -2,6 +2,7 @@
 
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GamificationChip } from "@/components/gamification/gamification-chip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ export function Sidebar({ onThemeChange }: { onThemeChange: (t: "system" | "ligh
             {collapsed ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
           </Button>
         </div>
+        <GamificationChip collapsed={collapsed} />
         <UserMenu collapsed={collapsed} />
       </div>
     </aside>
