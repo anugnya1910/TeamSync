@@ -45,8 +45,9 @@ export async function joinViaInvite(browser: Browser, inviteUrl: string, name: s
 /** Adds a task with the column quick-add on the board. */
 export async function quickAdd(page: Page, column: string, title: string) {
   const col = page.getByRole("region", { name: new RegExp(`^${column} column`) });
-  await col.getByRole("button", { name: "Add task" }).click();
   const input = page.getByLabel(`New task in ${column}`);
+  // Quick add stays open after creating a task, so reuse the input when it's already there.
+  if (!(await input.isVisible())) await col.getByRole("button", { name: "Add task" }).click();
   await input.fill(title);
   await input.press("Enter");
   await expect(card(page, title)).toBeVisible();

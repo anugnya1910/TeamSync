@@ -163,6 +163,7 @@ export function AssigneePicker({
           size="sm"
           role="combobox"
           aria-expanded={open}
+          aria-label={`Assignees: ${selected.length ? selected.map((m) => m.profile.full_name).join(", ") : "unassigned"}`}
           disabled={disabled}
           className={cn("h-8 w-full justify-between font-normal", compact && "w-auto")}
         >
@@ -230,7 +231,7 @@ export function LabelPicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button id={id} type="button" variant="outline" size="sm" role="combobox" aria-expanded={open} disabled={disabled} className="h-auto min-h-8 w-full justify-between font-normal">
+        <Button id={id} type="button" variant="outline" size="sm" role="combobox" aria-expanded={open} aria-label={`Labels: ${selected.length ? selected.map((l) => l.name).join(", ") : "none"}`} disabled={disabled} className="h-auto min-h-8 w-full justify-between font-normal">
           {selected.length ? (
             <span className="flex flex-wrap gap-1">
               {selected.map((l) => (

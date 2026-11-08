@@ -39,9 +39,12 @@ test.describe("Phase 2 — core collaboration", () => {
     await expect(other.page.getByRole("status").filter({ hasText: /live updates on/i })).toBeAttached({ timeout: 15_000 });
 
     // Keyboard-only drag: focus card, space to lift, arrow right to next column, space to drop.
+    await page.keyboard.press("Escape"); // close the quick-add input
     await card(page, "Move me").focus();
     await page.keyboard.press("Space");
+    await page.waitForTimeout(300);
     await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
     await page.keyboard.press("Space");
     await expect(page.getByRole("region", { name: /^In progress column/ }).getByText("Move me")).toBeVisible();
 
@@ -80,8 +83,11 @@ test.describe("Phase 2 — core collaboration", () => {
     await box.fill(`Please review @${handle} `);
     await page.getByRole("button", { name: "Comment", exact: true }).click();
     await expect(page.getByText("Please review")).toBeVisible();
+    // The mention renders highlighted only when it resolved to a project member.
+    await expect(page.getByText(`@${handle}`, { exact: true })).toBeVisible();
     await expect(other.page.getByTestId("unread-badge")).toBeVisible({ timeout: 10_000 });
     await other.page.goto(`/w/${slug}/inbox`);
+    await expect(other.page.getByRole("list", { name: "Notifications" })).toBeVisible();
     await expect(other.page.getByText(/mentioned you on MEN-1/)).toBeVisible();
     await expectNoSeriousA11yViolations(other.page, "inbox");
     await other.context.close();
