@@ -6,6 +6,7 @@ export type ErrorCode =
   | "VALIDATION"
   | "CONFLICT"
   | "TASK_BLOCKED"
+  | "SUBTASKS_OPEN"
   | "CYCLE_DETECTED"
   | "RATE_LIMITED"
   | "AI_UNAVAILABLE"
@@ -30,6 +31,7 @@ export type PgErrorLike = { code?: string | null; message?: string | null; detai
 
 const PREFIXED: ErrorCode[] = [
   "TASK_BLOCKED",
+  "SUBTASKS_OPEN",
   "CYCLE_DETECTED",
   "CONFLICT",
   "VALIDATION",
@@ -86,6 +88,8 @@ export function defaultMessage(code: ErrorCode): string {
       return "That conflicts with an existing item.";
     case "TASK_BLOCKED":
       return "This task is blocked by unfinished work.";
+    case "SUBTASKS_OPEN":
+      return "Complete or cancel the open subtasks first.";
     case "CYCLE_DETECTED":
       return "That dependency would create a cycle.";
     case "RATE_LIMITED":
