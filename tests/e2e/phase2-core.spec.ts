@@ -139,7 +139,7 @@ test.describe("Phase 2 — core collaboration", () => {
     await page.getByPlaceholder(/Search tasks/).fill("FIL-2");
     await page.getByRole("option", { name: /Open FIL-2/ }).click();
     await page.waitForURL(new RegExp(`/w/${slug}/t/FIL-2$`));
-    await expect(page.getByLabel("Task title")).toHaveValue("Beta task");
+    await expect(page.getByRole("textbox", { name: "Task title", exact: true })).toHaveValue("Beta task");
 
     // 10 CSV export.
     await page.goto(`/w/${slug}/p/FIL/list`);
